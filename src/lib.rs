@@ -1,12 +1,9 @@
-use std::collections::{BTreeMap, HashMap};
+use std::collections::HashMap;
 
-pub mod gff;
-pub use gff::*;
+pub mod record;
+pub use record::*;
 
-pub mod gtf;
-pub use gtf::*;
-
-pub fn coco(exons: BTreeMap<String, Vec<(u32, u32)>>) -> HashMap<String, u32> {
+pub fn coco(exons: HashMap<String, Vec<(u32, u32)>>) -> Option<HashMap<String, u32>> {
     let mut genes = HashMap::new();
     for (gene, exons) in exons.iter() {
         let (min_start, max_end) = exons.iter().fold((u32::MAX, 0), |acc, &(start, end)| {
@@ -24,5 +21,5 @@ pub fn coco(exons: BTreeMap<String, Vec<(u32, u32)>>) -> HashMap<String, u32> {
         let total_bp: u32 = bp.iter().sum();
         genes.insert(gene.clone(), total_bp);
     }
-    genes
+    Some(genes)
 }
