@@ -1,0 +1,28 @@
+[package]
+name = "coco"
+version = "0.1.0"
+authors = ["alejandrogzi <jose.gonzalesdezavala1@unmsm.edu.pe>"]
+edition = "2021"
+license = "MIT"
+description = "A GTF/GFF per gene non-overlapping exon length calculator"
+homepage = "https://github.com/alejandrogzi/coco"
+repository = "https://github.com/alejandrogzi/coco"
+readme = "README.md"
+keywords = ["gff", "gtf", "cli", "exon", "length", "gene"]
+categories = ["command-line-utilities", "science"]
+
+[dependencies]
+clap = { version = "4.4.2", features = ["derive"] }
+libc = "0.2.149"
+thiserror = "1.0.50"
+
+[profile.release]
+lto = true
+
+[lib]
+name = "coco"
+path = "src/lib.rs"
+
+[[bin]]
+name = "coco"
+path = "src/main.rs"
