@@ -1,5 +1,5 @@
 [package]
-name = "coco"
+name = "noel"
 version = "0.1.0"
 authors = ["alejandrogzi <jose.gonzalesdezavala1@unmsm.edu.pe>"]
 edition = "2021"
@@ -20,9 +20,9 @@ thiserror = "1.0.50"
 lto = true
 
 [lib]
-name = "coco"
+name = "noel"
 path = "src/lib.rs"
 
 [[bin]]
-name = "coco"
+name = "noel"
 path = "src/main.rs"
