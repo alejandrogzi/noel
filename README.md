@@ -56,9 +56,15 @@ to include noel as a library and use it within your project follow these steps:
     ```
 3. invoke
     ``` rust
-    let exons = noel_reader(input: &PathBuf)
-    let lengths: HashMap<String, u32> = noel(exons: HashMap<String, Vec<(u32, u32)>>)
+    let exons: HashMap<String, Vec<(u32, u32)>> = noel_reader(input: &PathBuf)?
+    let lengths: HashMap<String, u32> = noel(exons)
     ```
+4. you will end with a HashMap, where each gene name (gene_id) is a key to its length
+    ```text
+    {"ENSG00000261469": 533, "ENSG00000150990": 6908, "ENSG00000136490": 4751, "ENSG00000290760": 801}
+    ```
+
+
 
 
 ## Benchmark
