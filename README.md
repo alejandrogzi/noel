@@ -1,4 +1,4 @@
-![version-badge](https://img.shields.io/badge/version-0.1.0-green)
+![version-badge](https://img.shields.io/badge/version-0.2.0-green)
 ![Crates.io](https://img.shields.io/crates/v/noel)
 ![GitHub](https://img.shields.io/github/license/alejandrogzi/noel?color=blue)
 
@@ -15,7 +15,7 @@ Takes in a GTF/GFF file and outputs a .txt file with non-overlapping exon length
 
 ## Usage
 ``` rust
-Usage: noel[EXE] --i <GTF/GFF> --o <OUTPUT>
+Usage: noel --i <GTF/GFF> --o <OUTPUT>
 
 Arguments:
     --i <GTF/GFF>: GTF/GFF file
@@ -44,7 +44,7 @@ to build noel from this repo, do:
 
 ## Library
 to include noel as a library and use it within your project follow these steps:
-1. include `noel = 0.1.0` or `noel = "*"` under `[dependencies]` in your `Cargo.toml` file or just run `cargo add noel` from the command line
+1. include `noel = 0.2.0` or `noel = "*"` under `[dependencies]` in your `Cargo.toml` file or just run `cargo add noel` from the command line
 2. the library name is `noel`, to use it just write:
 
     ``` rust
@@ -57,11 +57,11 @@ to include noel as a library and use it within your project follow these steps:
 3. invoke
     ``` rust
     let exons: HashMap<String, Vec<(u32, u32)>> = noel_reader(input: &PathBuf)?
-    let lengths: HashMap<String, u32> = noel(exons)
+    let lengths: Vec<(String, u32)> = noel(exons)
     ```
 4. you will end with a HashMap, where each gene name (gene_id) is a key to its length
     ```text
-    {"ENSG00000261469": 533, "ENSG00000150990": 6908, "ENSG00000136490": 4751, "ENSG00000290760": 801}
+    [("ENSG00000261469": 533), ("ENSG00000150990": 6908), ("ENSG00000136490": 4751), ("ENSG00000290760": 801)]
     ```
 
 
