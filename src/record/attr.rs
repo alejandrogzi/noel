@@ -10,7 +10,7 @@ pub struct Attribute {
 }
 
 impl Attribute {
-    pub fn parse(line: &String) -> Result<Attribute, CocoError> {
+    pub fn parse(line: &str) -> Result<Attribute, NoelError> {
         if !line.is_empty() {
             let mut attributes: HashMap<String, String> = HashMap::new();
             let bytes = line.as_bytes().iter().enumerate();
@@ -20,20 +20,20 @@ impl Attribute {
                 if *byte == b';' {
                     let word = &line[start..i];
                     if !word.is_empty() && word.starts_with("gene_id") {
-                        let (key, value) = get_pair(word).ok_or(CocoError::Parse)?;
+                        let (key, value) = get_pair(word).ok_or(NoelError::Parse)?;
                         attributes.insert(key, value);
                     }
                     start = i + 1;
                 }
             }
 
-            let gene_id = attributes.get("gene_id").ok_or(CocoError::Invalid);
+            let gene_id = attributes.get("gene_id").ok_or(NoelError::Invalid);
 
             Ok(Attribute {
                 gene_id: gene_id?.to_string(),
             })
         } else {
-            Err(CocoError::Empty)
+            Err(NoelError::Empty)
         }
     }
 
@@ -74,7 +74,7 @@ fn get_gene(gene: &str, sep: &str) -> Option<String> {
 }
 
 #[derive(Error, Debug, PartialEq)]
-pub enum CocoError {
+pub enum NoelError {
     #[error("Empty line")]
     Empty,
     #[error("Invalid GTF line")]
@@ -111,7 +111,7 @@ mod tests {
         let input = "transcript_id \"XYZ\"; exon_number \"1\";".to_string();
         let result = Attribute::parse(&input);
 
-        assert_eq!(result.unwrap_err(), CocoError::Invalid);
+        assert_eq!(result.unwrap_err(), NoelError::Invalid);
     }
 
     #[test]

@@ -3,25 +3,25 @@ pub use attr::*;
 
 #[derive(Debug, PartialEq, Eq, Ord, PartialOrd)]
 pub struct Record {
-    feat: String,
-    start: u32,
-    end: u32,
-    gene_id: String,
+    pub feat: String,
+    pub start: u32,
+    pub end: u32,
+    pub gene_id: String,
 }
 
 impl Record {
-    pub fn new(line: String) -> Result<Self, CocoError> {
-        if line.is_empty() {
-            return Err(CocoError::Empty);
+    pub fn new(line: &str) -> Result<Self, NoelError> {
+        if line.is_empty() || line.starts_with('#') {
+            return Err(NoelError::Empty);
         }
 
-        let fields = splitb(line)?;
+        let fields = line.split('\t').collect::<Vec<&str>>();
 
         if fields[2] != "exon" {
-            return Err(CocoError::NoExon);
+            return Err(NoelError::NoExon);
         }
 
-        let gene_id = Attribute::parse(&fields[8])?;
+        let gene_id = Attribute::parse(fields[8])?;
 
         Ok(Record {
             feat: fields[2].to_string(),
@@ -40,24 +40,6 @@ impl Record {
     }
 }
 
-fn splitb(line: String) -> Result<Vec<String>, CocoError> {
-    let bytes = line.as_bytes().iter().enumerate();
-    let mut start = 0;
-    let mut entries = Vec::new();
-
-    for (i, byte) in bytes {
-        if *byte == b'\t' {
-            let word = line[start..i].to_string();
-            if !word.is_empty() {
-                entries.push(word);
-            }
-            start = i + 1;
-        }
-    }
-    entries.push(line[start..].to_string());
-    Ok(entries)
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -65,7 +47,7 @@ mod tests {
     #[test]
     fn valid_record() {
         let line = "1\thavana\texon\t2408530\t2408619\t.\t-\t0\tgene_id \"ENSG00000157911\"; gene_version \"11\"; transcript_id \"ENST00000508384\"; transcript_version \"5\"; exon_number \"3\"; gene_name \"PEX10\"; gene_source \"ensembl_havana\"; gene_biotype \"protein_coding\"; transcript_name \"PEX10-205\"; transcript_source \"havana\"; transcript_biotype \"protein_coding\"; protein_id \"ENSP00000464289\"; protein_version \"1\"; tag \"cds_end_NF\"; tag \"mRNA_end_NF\"; transcript_support_level \"3\";".to_string();
-        let result = Record::new(line.clone());
+        let result = Record::new(&line);
 
         assert!(result.is_ok());
 
@@ -79,16 +61,16 @@ mod tests {
     #[test]
     fn empty_record() {
         let line = "".to_string();
-        let result = Record::new(line);
+        let result = Record::new(&line);
 
         assert!(result.is_err());
-        assert_eq!(result.unwrap_err(), CocoError::Empty);
+        assert_eq!(result.unwrap_err(), NoelError::Empty);
     }
 
     #[test]
     fn test_info() {
         let line = "1\thavana\texon\t2408530\t2408619\t.\t-\t0\tgene_id \"ENSG00000157911\"; gene_version \"11\"; transcript_id \"ENST00000508384\"; transcript_version \"5\"; exon_number \"3\"; gene_name \"PEX10\"; gene_source \"ensembl_havana\"; gene_biotype \"protein_coding\"; transcript_name \"PEX10-205\"; transcript_source \"havana\"; transcript_biotype \"protein_coding\"; protein_id \"ENSP00000464289\"; protein_version \"1\"; tag \"cds_end_NF\"; tag \"mRNA_end_NF\"; transcript_support_level \"3\";".to_string();
-        let record = Record::new(line).unwrap();
+        let record = Record::new(&line).unwrap();
         let (start, end, gene_id) = record.info();
 
         assert_eq!(start, 2408530);

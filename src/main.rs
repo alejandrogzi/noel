@@ -3,11 +3,11 @@
 //!
 //! ## Usage
 //! ``` rust
-//! Usage: noel[EXE] --i <GTF/GFF> --o <OUTPUT>
+//! Usage: noel -g/--gtf <GTF/GFF> -o/--out <OUTPUT>
 //!
 //! Arguments:
-//! --i <GTF/GFF>: GTF/GFF file
-//! --o <OUTPUT>: .txt file
+//! -g/--gtf <GTF/GFF>: GTF/GFF file
+//! -o/--out <OUTPUT>: .txt file
 //! Options:
 //! --help: print help
 //! --version: print version
@@ -29,7 +29,7 @@
 //!
 //! ## Library
 //!
-//! 1. include `noel = 0.1.0` or `noel = "*"` under `[dependencies]` in your `Cargo.toml` file or just run `cargo add noel` from the command line
+//! 1. include `noel = 0.2.1` or `noel = "*"` under `[dependencies]` in your `Cargo.toml` file or just run `cargo add noel` from the command line
 //! 2. the library name is `noel`, to use it just write:
 //! ``` rust
 //! use noel::{noel, noel_reader};
@@ -41,14 +41,15 @@
 //! 3. invoke
 //! ``` rust
 //! let exons = noel_reader(input: &PathBuf)
-//! let lengths: HashMap<String, u32> = noel(exons: HashMap<String, Vec<(u32, u32)>>)
+//! let lengths: Vec<(String, u32)> = noel(exons: HashMap<String, Vec<(u32, u32)>>)
 //! ```
 
-use std::collections::HashMap;
 use std::fs::File;
-use std::io::{BufRead, Write};
+use std::io::{BufWriter, Write};
 use std::path::PathBuf;
 use std::time::Instant;
+
+use num_cpus;
 
 use clap::{self, Parser};
 
@@ -57,47 +58,53 @@ pub use noel::*;
 #[derive(Parser, Debug)]
 #[command(
     author = "Alejandro Gonzales-Irribarren",
-    version = "0.1.0",
+    version = "0.2.1",
     about = "An extremely fast GTF/GFF per gene Non-Overlapping Exon Length calculator written in Rust."
 )]
 struct Args {
     /// Input gtf/gff file
-    #[clap(short, long)]
-    input: PathBuf,
+    #[clap(
+        short = 'g',
+        long = "gtf",
+        help = "GTF/GFF file",
+        value_name = "GTF/GFF",
+        required = true
+    )]
+    gtf: PathBuf,
+
     /// Output file
-    #[clap(short, long)]
-    output: PathBuf,
+    #[clap(
+        short = 'o',
+        long = "out",
+        help = "Output .txt file",
+        value_name = "OUTPUT",
+        required = true
+    )]
+    out: PathBuf,
+
+    #[clap(
+        short = 't',
+        long,
+        help = "Number of threads",
+        value_name = "THREADS",
+        default_value_t = num_cpus::get()
+    )]
+    threads: usize,
 }
 
 fn main() {
     let start = Instant::now();
     let start_mem = max_mem_usage_mb();
     let args = Args::parse();
+    let mut output = BufWriter::new(File::create(&args.out).unwrap());
 
-    let rdr = read_gtf(&args.input).unwrap();
-    let mut exons: HashMap<String, Vec<(u32, u32)>> = HashMap::new();
-    let mut output = File::create(&args.output).unwrap();
+    rayon::ThreadPoolBuilder::new()
+        .num_threads(args.threads)
+        .build_global()
+        .unwrap();
 
-    for line in rdr.lines() {
-        let line = line.unwrap();
-
-        if line.starts_with("#") {
-            continue;
-        }
-
-        match Record::new(line) {
-            Ok(record) => {
-                let (start, end, gene_id) = record.info();
-                exons
-                    .entry(gene_id)
-                    .or_insert(Vec::new())
-                    .push((start, end));
-            }
-            Err(_) => continue,
-        }
-    }
-
-    let genes = noel(exons).unwrap();
+    let exons = noel_reader(&args.gtf).expect("Error reading GTF/GFF file");
+    let genes = get_lengths(exons).expect("Error calculating exon lengths");
 
     genes.iter().for_each(|(gene, bp)| {
         writeln!(output, "{}\t{}", gene, bp).unwrap();
@@ -105,7 +112,7 @@ fn main() {
 
     let elapsed = start.elapsed().as_secs_f64();
     let mem = (max_mem_usage_mb() - start_mem).max(0.0);
-    eprintln!("Elapsed: {elapsed}s | Memory: {mem} MB");
+    println!("Elapsed: {:.4}s | Memory: {:.4} MB", elapsed, mem);
 }
 
 fn max_mem_usage_mb() -> f64 {

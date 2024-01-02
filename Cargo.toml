@@ -1,6 +1,6 @@
 [package]
 name = "noel"
-version = "0.1.0"
+version = "0.2.1"
 authors = ["alejandrogzi <jose.gonzalesdezavala1@unmsm.edu.pe>"]
 edition = "2021"
 license = "MIT"
@@ -15,6 +15,8 @@ categories = ["command-line-utilities", "science"]
 clap = { version = "4.4.2", features = ["derive"] }
 libc = "0.2.149"
 thiserror = "1.0.50"
+rayon = "1.8.0"
+num_cpus = "1.13.0"
 
 [profile.release]
 lto = true
